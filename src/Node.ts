@@ -32,7 +32,7 @@ export class NodeId {
     toJSON(): {} {
         return {
             ipAddress: this.ipAddress,
-            port: this.port
+            port: this.port,
         }
     }
 }
@@ -66,7 +66,6 @@ export class Message {
 }
 
 export class Node {
-
     id: NodeId;
 
     leftNode: NodeReference;
@@ -103,12 +102,15 @@ export class Node {
         // Create HTTP server
         this.httpServer = Http.createServer((req, res) => {
             res.writeHead(200);
-            res.write(`<html>
-                <b>NODE:</b> ${this.getId()}<br>   
-                <b>leftNode:</b> ${this.leftNode}<br>      
-                <b>rightNode:</b> ${this.rightNode}<br>      
-                <b>Topology healthy:</b> ${this.topologyHealthy ? 'Yes' : 'No'}<br>
-            </html>`);
+            res.write(`
+                <html>
+                    <b>NODE:</b> ${this.getId()}<br>   
+                    <b>Leader:</b> ${this.leader ? 'Yes' : 'No'}<br>
+                    <b>Topology healthy:</b> ${this.topologyHealthy ? 'Yes' : 'No'}<br><br> 
+                    <b>leftNode:</b> ${this.leftNode}<br>      
+                    <b>rightNode:</b> ${this.rightNode}<br>     
+                </html>
+            `);
             res.end();
         });
 
@@ -125,7 +127,8 @@ export class Node {
             this.log(`HTTP server listening on port ${this.id.port}`);
         });
 
-        this.connectToRightNode()
+        if (this.leader || this.leftNode.socket)
+            this.connectToRightNode();
     }
 
     private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
@@ -145,11 +148,37 @@ export class Node {
 
         switch (msg.action) {
             case 'HELLO':
+
+                // Set reference to left node
+                this.leftNode = new NodeReference(payload.id, socket);
+
                 this.log(`New connection from: ${payload.id}`);
                 this.sendMessage(socket, new Message('HELLO', {
                     id: this.getId()
                 }));
+
+                setTimeout(() => {
+                    if (this.leader) {
+                        this.log("Sending HEALTHY");
+                        this.topologyHealthy = true;
+                        if (this.rightNode.socket)
+                            this.sendMessage(this.rightNode.socket, new Message('HEALTHY', {
+                                healthy: true
+                            }));
+                    }
+                }, 1000);
+
                 break;
+            case 'HEALTHY': {
+                this.log("Received HEALTHY");
+                if (!this.topologyHealthy) {
+                    this.topologyHealthy = payload.healthy;
+                    if (this.rightNode.socket)
+                        this.sendMessage(this.rightNode.socket, new Message('HEALTHY', {
+                            healthy: true
+                        }));
+                }
+            }
         }
     }
 
@@ -179,6 +208,8 @@ export class Node {
 
             ws.on('message', (rawMsg: string) => this.onMessageClient(ws, rawMsg));
         });
+
+        ws.on('error', this.connectToRightNode);
     }
 
     private onMessageClient(socket: WebSocket, rawMsg: string) {
