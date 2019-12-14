@@ -1,7 +1,16 @@
 import WebSocket from 'ws';
 import Http from 'http';
 import Debug from 'debug';
+import Colors, {Color} from 'colors';
 import {sleep, ip2int} from "./helpers";
+const colors: any = Colors;
+
+colors.setTheme({
+    info: 'green',
+    warn: 'yellow',
+    debug: 'blue',
+    error: 'red'
+});
 
 /**
  * Identification of Node
@@ -268,7 +277,7 @@ export class Node {
                 // If leader received back my HEALTH check
                 if (payload.forId === this.getId()) {
                     this.circleHealthy = true;
-                    this.log("CIRCLE IS HEALTHY!");
+                    this.log(colors.info(`CIRCLE IS HEALTHY!`));
 
                     // Let all other nodes report to this leader node
                     Node.sendMessage(this.rightNode, new Message('REPORT', {
@@ -284,7 +293,7 @@ export class Node {
 
                 // If leader received back my REPORT message
                 if (payload.forId === this.getId()) {
-                    this.log("EVERYONE REPORTED TO ME!");
+                    this.log(colors.info(`EVERYONE REPORTED TO ME!`));
                     this.connectToSlaves(payload.slaves);
                 } else {
                     msg.payload.slaves.push(this.id);
@@ -333,7 +342,7 @@ export class Node {
 
                 // If toBeElected is equals to this, set myself as leader and inform others
                 else if (toBeElectedNodeId.toNumber() === this.id.toNumber()) {
-                    this.log(`I WAS ELECTED AS LEADER!`);
+                    this.log(colors.info(`I WAS ELECTED AS LEADER!`));
                     this.leader = true;
                     this.electionParticipant = false;
 
@@ -359,7 +368,7 @@ export class Node {
                     return;
 
                 // If this node should watch leader
-                if(payload.watchMe) {
+                if (payload.watchMe) {
                     this.watchingLeader = true;
                     payload.watchMe = false;
                 }
@@ -373,7 +382,7 @@ export class Node {
     private setHealthCorrupted() {
         this.circleHealthy = false;
         this.slaveNodes = [];
-        this.log(`HEALTH OF CIRCLE IS CORRUPTED!`);
+        this.log(colors.warn(`HEALTH OF CIRCLE IS CORRUPTED!`));
 
         // Start health re-check
         this.initHealthCheck();
