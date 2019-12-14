@@ -1,8 +1,12 @@
 import WebSocket from 'ws';
-import Http from 'http';
+import Http from "http";
+import Express from 'express';
+import bodyParser from 'body-parser';
 import Debug from 'debug';
 import Colors, {Color} from 'colors';
-import {sleep, ip2int} from "./helpers";
+import {sleep, ip2int, nodeRootPage} from "./helpers";
+import {parse} from "ts-node";
+
 const colors: any = Colors;
 
 colors.setTheme({
@@ -47,6 +51,14 @@ export class NodeId {
      */
     static fromJSON(json: { ipAddress: string, port: number }): NodeId {
         return new NodeId(json.ipAddress, json.port);
+    }
+
+    /**
+     * Deserialize from string into class
+     */
+    static fromString(string: string): NodeId {
+        const split = string.split(':');
+        return new NodeId(split[0], parseInt(split[1]));
     }
 }
 
@@ -110,12 +122,12 @@ export class Message {
     }
 }
 
-
 export class Node {
     id: NodeId;
 
-    leftNode: NodeReference;
+    //leftNode: NodeReference;
     rightNode: NodeReference;
+    masterNode: NodeReference | undefined;
 
     leader: boolean;
     watchingLeader: boolean;
@@ -130,12 +142,21 @@ export class Node {
     Log: Debug.Debugger;
 
     httpServer: Http.Server | undefined;
+    expressApp: Express.Application | undefined;
     wsServer: WebSocket.Server | undefined;
 
-    constructor(leftNodeId: NodeId, rightNodeId: NodeId, nodeId: NodeId = new NodeId('127.0.0.1', 3000), isLeader = false) {
+    sharedVariable: any;
+    sharedVariableTimeout: number | undefined;
+    sharedVariableResolve: Function | undefined;
+
+    signedIn: boolean;
+
+    nextDisconnectIsNotFail: boolean;
+
+    constructor(/*leftNodeId: NodeId, */rightNodeId: NodeId, nodeId: NodeId = new NodeId('127.0.0.1', 3000), isLeader = false) {
         this.id = nodeId;
 
-        this.leftNode = new NodeReference(leftNodeId);
+        //this.leftNode = new NodeReference(leftNodeId);
         this.rightNode = new NodeReference(rightNodeId);
 
         this.leader = isLeader;
@@ -150,66 +171,20 @@ export class Node {
         this.Log = Debug(this.toString());
         this.log = (msg: string) => this.Log(`[${new Date().toISOString()}] ${msg}`);
 
+        this.signedIn = true;
+
+        this.nextDisconnectIsNotFail = false;
+
         this.startServer();
     }
 
     private startServer() {
 
+        this.expressApp = Express();
         // Create HTTP server
-        this.httpServer = Http.createServer((req, res) => {
-            res.writeHead(200);
+        this.httpServer = Http.createServer(this.expressApp);
 
-            // Information about node (for debugging purposes)
-            let slaveList: string = '';
-            let first: boolean = true;
-            for (let slave of this.slaveNodes) {
-                slaveList += `
-                        <tr>
-                            <td><b>${first ? 'Slaves:' : ''}</b></td>
-                            <td>${slave}</td>
-                        </tr>
-                    `;
-                first = false;
-            }
-            res.write(`
-                <html>
-                    <table>
-                        <thead>
-                            <tr>
-                                <td><b>Node:</b></td>
-                                <td>${this.getId()}</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><b>leftNode:</b></td>
-                                <td>${this.leftNode}</td>
-                            </tr>
-                            <tr>
-                                <td><b>rightNode:</b></td>
-                                <td>${this.rightNode}</td>
-                            </tr>
-                            <tr>
-                                <td><b>Leader:</b></td>
-                                <td>${this.leader ? 'Yes' : 'No'}</td>
-                            </tr>
-                        </tbody>
-                    </table><br>
-                    ${this.leader ? `
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><b>Circle healthy:</b></td>
-                                <td>${this.circleHealthy ? `Yes` : `No`}</td>
-                            </tr>
-                            ${slaveList}
-                        </tbody>
-                    </table>
-                    ` : ``}
-                </html>
-            `);
-            res.end();
-        });
+        this.setExpressRoutes(this.expressApp);
 
         // Create WS server
         this.wsServer = new WebSocket.Server({
@@ -226,7 +201,141 @@ export class Node {
             );
         });
 
-        this.connectToNode(this.rightNode, true);
+        this.connectToNode(this.rightNode);
+    }
+
+    private setExpressRoutes(app: Express.Application): void {
+        app.use(bodyParser.json());
+
+        // Information about node (for debugging purposes)
+        app.get('/', (req: Express.Request, res: Express.Response) => {
+            res.send(nodeRootPage(this));
+        });
+
+        // Get shared variable
+        app.get('/variable', (req: Express.Request, res: Express.Response) => {
+            if (this.sharedVariable)
+                res.json({
+                    success: true,
+                    variable: this.sharedVariable
+                });
+            else
+                res.status(404).json({
+                    success: false,
+                    error: 'Not set'
+                });
+        });
+
+        // Set shared variable
+        app.post('/variable/set', async (req: Express.Request, res: Express.Response) => {
+
+            let success = true;
+            let error = undefined;
+            const variable = req.body.variable;
+
+            if (!this.leader)
+                return res.json({
+                    success: false,
+                    error: 'Not leader'
+                });
+
+            if (!this.circleHealthy)
+                return res.json({
+                    success: false,
+                    error: 'Not healthy'
+                });
+
+            if (!variable)
+                return res.json({
+                    success: false,
+                    error: 'Invalid input'
+                });
+
+            if (!await this.setSharedVariable(variable))
+                return res.json({
+                    success: false,
+                    error: 'Propagation failed after 3 tries'
+                });
+
+            res.json({
+                success: true
+            });
+        });
+
+        // Sign-out from circle
+        app.get('/signout', (req: Express.Request, res: Express.Response) => {
+            if (!this.rightNode.socket || !this.signedIn)
+                return res.json({
+                    success: false,
+                    error: 'Already signed-out'
+                });
+
+            this.leader = false;
+            this.signedIn = false;
+            this.watchingLeader = false;
+
+            if (this.wsServer)
+                for (const client of Array.from(this.wsServer.clients))
+                    client.close();
+            this.rightNode.socket.socket.close();
+            this.rightNode.socket = undefined;
+
+            return res.json({
+                success: true
+            });
+        });
+
+        // Sign-in to circle
+        // Sign-out from circle
+        app.get('/signin', (req: Express.Request, res: Express.Response) => {
+            if (this.rightNode.socket || this.signedIn)
+                return res.json({
+                    success: false,
+                    error: 'Already signed-in'
+                });
+
+            this.signedIn = true;
+
+            this.connectToNode(this.rightNode, true);
+
+            return res.json({
+                success: true,
+            });
+        });
+    }
+
+    private async setSharedVariable(variable: any, tries: number = 0): Promise<any> {
+        if (tries < 3) {
+            this.sendVariable(variable);
+            const wait = () => new Promise(resolve => {
+                this.sharedVariableResolve = resolve;
+                this.sharedVariableTimeout = setTimeout(this.sharedVariableResolve, 3000);
+            });
+            await wait();
+
+            if (this.sharedVariable !== variable)
+                this.setSharedVariable(variable, tries++);
+
+            return true;
+        } else
+            return false;
+    }
+
+    private sendVariable(variable: any) {
+        Node.sendMessage(this.rightNode, new Message('VARIABLE', {
+            forId: this.getId(),
+            fromId: this.getId(),
+            variable
+        }));
+        this.log(`Sent VARIABLE to: ${this.rightNode.id}`);
+    }
+
+    private signIn() {
+
+    }
+
+    private signOut() {
+
     }
 
     private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
@@ -235,9 +344,12 @@ export class Node {
         socket.on('message', (msg: string) => this.onMessageServer(socket, msg));
 
         socket.on('close', function () {
-            self.log(`Lost connection from: ${self.leftNode.id}`);
+            self.log(`Lost connection from some node!`);
             try {
-                self.reportNodeFailure();
+                if (!self.nextDisconnectIsNotFail)
+                    self.reportNodeFailure();
+                else
+                    self.nextDisconnectIsNotFail = false;
             } catch (err) {
                 // Ignore (rightNode is not yet connected)
             }
@@ -253,12 +365,16 @@ export class Node {
 
         const payload: any = msg.payload;
 
+        // Discard every incoming message if not signed-in
+        if (!this.signedIn)
+            return this.log(`Discarded ${msg.action} from: ${payload.fromId} (SIGNED-OUT)`);
+
         switch (msg.action) {
             case 'HELLO':
                 // Set reference to left node
                 //this.leftNode = new NodeReference(payload.id, socket);
 
-                this.log(`Received HELLO from: ${payload.fromId} ${JSON.stringify(payload)}`);
+                this.log(`Received HELLO from: ${payload.fromId}`);
 
                 // Leader can start first HEALTH check
                 if (this.leader)
@@ -268,6 +384,22 @@ export class Node {
                 if (payload.watchMe) {
                     this.log(`I AM WATCHING LEADER!`);
                     this.watchingLeader = true;
+                }
+
+                // My old ancestor reconnected (re-signed-in)
+                if (payload.reconnect) {
+                    if (this.leader)
+                        this.setHealthCorrupted();
+
+                    Node.sendMessage(this.rightNode, new Message('RECONNECT', {
+                        fromId: this.getId(),
+                        originNodeId: this.getId(),
+
+                        // Who reconnected
+                        reconnectedNode: NodeId.fromString(payload.fromId),
+                    }));
+
+                    this.log(`Sent RECONNECT to: ${this.rightNode.id}`);
                 }
 
                 break;
@@ -308,6 +440,16 @@ export class Node {
                 // If this node is leader, uncheck healthy state
                 if (this.leader)
                     this.setHealthCorrupted();
+
+                // Disconnect right node manually, if this is reconnect (fake fail)
+                if (payload.reconnect && this.rightNode.socket) {
+                    Node.sendMessage(this.rightNode, new Message('LEAVING', {
+                        fromId: this.getId()
+                    }));
+                    this.log(`Sent LEAVING to: ${this.rightNode.id}`);
+                    this.rightNode.socket.socket.close();
+                    this.rightNode.socket = undefined;
+                }
 
                 // If node without connected rightNode received FAIL message
                 if (!this.rightNode.socket) {
@@ -375,6 +517,57 @@ export class Node {
 
                 this.electionParticipant = false;
                 this.forwardMessage(msg);
+                break;
+            case 'VARIABLE':
+                this.log(`Received VARIABLE from: ${payload.fromId}`);
+
+                this.sharedVariable = payload.variable;
+
+                // If this is my message, discard
+                if (payload.forId === this.getId()) {
+                    if (this.sharedVariableResolve && this.sharedVariableTimeout) {
+                        this.sharedVariableResolve();
+                        clearTimeout(this.sharedVariableTimeout);
+                    }
+                    return;
+                }
+
+                this.forwardMessage(msg);
+                break;
+            case 'RECONNECT':
+                this.log(`Received RECONNECT from: ${payload.fromId} ${JSON.stringify(payload)}`);
+
+                const reconnectedNodeId: NodeId = NodeId.fromJSON(payload.reconnectedNode);
+
+                // If this node is leader, uncheck healthy state
+                if (this.leader)
+                    this.setHealthCorrupted();
+
+                // If this message came from my right neighbor
+                if (payload.originNodeId === this.rightNode.id.toString()) {
+                    // Disconnect right node manually
+                    if (this.rightNode.socket) {
+                        Node.sendMessage(this.rightNode, new Message('LEAVING', {
+                            fromId: this.getId()
+                        }));
+                        this.log(`Sent LEAVING to: ${this.rightNode.id}`);
+                        this.rightNode.socket.socket.close();
+                        this.rightNode.socket = undefined;
+                    }
+
+                    // Reconfigure rightNode
+                    this.rightNode = new NodeReference(reconnectedNodeId);
+
+                    this.log(`Reconfigured rightNode to: ${reconnectedNodeId}`);
+
+                    // Connect to newly configured node
+                    this.connectToNode(this.rightNode);
+                } else
+                    this.forwardMessage(msg);
+                break;
+            case 'LEAVING':
+                this.log(`Received LEAVING from: ${payload.fromId}`);
+                this.nextDisconnectIsNotFail = true;
                 break;
         }
     }
@@ -469,15 +662,7 @@ export class Node {
         this.log(`Sent HEALTHY to: ${this.rightNode.id}`);
     }
 
-    getId() {
-        return this.id.toString();
-    }
-
-    toString() {
-        return `Node ${this.getId()}`;
-    }
-
-    private connectToNode(node: NodeReference, slaveConnect: boolean = false) {
+    private connectToNode(node: NodeReference, reconnect: boolean = false) {
         // Do nothing when connection already exists
         if (node.socket)
             return;
@@ -489,7 +674,8 @@ export class Node {
             node.socket = new SocketReference(ws);
             Node.sendMessage(node, new Message('HELLO', {
                 fromId: this.getId(),
-                watchMe: slaveConnect && this.leader
+                watchMe: this.leader,
+                reconnect
             }));
 
             // No need for Server->Client messages, yet
@@ -501,7 +687,7 @@ export class Node {
             this.connectToNode(node);
         });
 
-        ws.on('close', () => {
+        ws.on('close', async () => {
             node.socket = undefined;
             this.log(`Lost connection to: ${node.id}`);
         });
@@ -519,7 +705,7 @@ export class Node {
             originNode: this.id,
 
             // Who died
-            failedNode: this.leftNode.id
+            //failedNode: this.leftNode.id
         }));
 
         this.log(`Sent FAIL to: ${this.rightNode.id}`);
@@ -550,5 +736,13 @@ export class Node {
             return node.socket.socket.send(JSON.stringify(msg));
         else
             throw new Error(`rightNode's socket reference does not exists.`);
+    }
+
+    getId() {
+        return this.id.toString();
+    }
+
+    toString() {
+        return `Node ${this.getId()}`;
     }
 }

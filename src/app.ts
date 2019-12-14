@@ -22,7 +22,7 @@ async function init() {
     for (let i = 0; i < nodesCount; i++) {
         await sleep(100);
         new Node(
-            nodes[i === 0 ? nodesCount - 1 : i - 1],
+            //nodes[i === 0 ? nodesCount - 1 : i - 1],
             nodes[i === nodesCount - 1 ? 0 : i + 1],
             nodes[i],
             i === 0
