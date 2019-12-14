@@ -3,20 +3,9 @@ import Http from 'http';
 import Debug from 'debug';
 import {sleep, ip2int} from "./helpers";
 
-export class NodeReference {
-    id: NodeId;
-    socket: WebSocket | undefined;
-
-    constructor(id: NodeId, socket?: WebSocket) {
-        this.id = id;
-        this.socket = socket;
-    }
-
-    toString(): string {
-        return `${this.id} ${this.socket ? 'CONNECTED' : 'DISCONNECTED'}`;
-    }
-}
-
+/**
+ * Identification of Node
+ */
 export class NodeId {
     ipAddress: string;
     port: number;
@@ -52,6 +41,26 @@ export class NodeId {
     }
 }
 
+/**
+ * Reference to Node and WebSocket tunnel between
+ */
+export class NodeReference {
+    id: NodeId;
+    socket: WebSocket | undefined;
+
+    constructor(id: NodeId, socket?: WebSocket) {
+        this.id = id;
+        this.socket = socket;
+    }
+
+    toString(): string {
+        return `${this.id} ${this.socket ? 'CONNECTED' : 'DISCONNECTED'}`;
+    }
+}
+
+/**
+ * Message transferred between Nodes over WebSocket
+ */
 export class Message {
     action: string;
     payload: any;
@@ -80,6 +89,7 @@ export class Message {
     }
 }
 
+
 export class Node {
     id: NodeId;
 
@@ -95,7 +105,8 @@ export class Node {
 
     circleHealthy: boolean;
 
-    log: Debug.Debugger;
+    log: Function;
+    Log: Debug.Debugger;
 
     httpServer: Http.Server | undefined;
     wsServer: WebSocket.Server | undefined;
@@ -115,7 +126,8 @@ export class Node {
 
         this.circleHealthy = false;
 
-        this.log = Debug(this.toString());
+        this.Log = Debug(this.toString());
+        this.log = (msg: string) => this.Log(`[${new Date().toISOString()}] ${msg}`);
 
         this.startServer();
     }
@@ -124,21 +136,21 @@ export class Node {
 
         // Create HTTP server
         this.httpServer = Http.createServer((req, res) => {
-                res.writeHead(200);
+            res.writeHead(200);
 
-                // Information about node (for debugging purposes)
-                let slaveList: string = '';
-                let first: boolean = true;
-                for (let slave of this.slaveNodes) {
-                    slaveList += `
+            // Information about node (for debugging purposes)
+            let slaveList: string = '';
+            let first: boolean = true;
+            for (let slave of this.slaveNodes) {
+                slaveList += `
                         <tr>
                             <td><b>${first ? 'Slaves:' : ''}</b></td>
                             <td>${slave}</td>
                         </tr>
                     `;
-                    first = false;
-                }
-                res.write(`
+                first = false;
+            }
+            res.write(`
                 <html>
                     <table>
                         <thead>
@@ -175,9 +187,8 @@ export class Node {
                     ` : ``}
                 </html>
             `);
-                res.end();
-            }
-        );
+            res.end();
+        });
 
         // Create WS server
         this.wsServer = new WebSocket.Server({
@@ -194,7 +205,7 @@ export class Node {
             );
         });
 
-        this.connectToNode(this.rightNode);
+        this.connectToNode(this.rightNode, true);
     }
 
     private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
@@ -220,7 +231,7 @@ export class Node {
                 // Set reference to left node
                 //this.leftNode = new NodeReference(payload.id, socket);
 
-                this.log(`Received HELLO from: ${payload.fromId}`);
+                this.log(`Received HELLO from: ${payload.fromId} ${JSON.stringify(payload)}`);
 
                 // Leader can start first HEALTH check
                 if (this.leader)
@@ -301,11 +312,16 @@ export class Node {
                 else if (toBeElectedNodeId.toNumber() === this.id.toNumber()) {
                     this.leader = true;
                     this.electionParticipant = false;
-                    Node.sendMessage(this.rightNode, new Message('ELECTED', {
-                        newLeaderId: this.getId(),
-                        fromId: this.getId()
-                    }));
-                    this.log(`Sent ELECTED to: ${this.rightNode.id}`);
+
+                    try {
+                        Node.sendMessage(this.rightNode, new Message('ELECTED', {
+                            newLeaderId: this.getId(),
+                            fromId: this.getId()
+                        }));
+                        this.log(`Sent ELECTED to: ${this.rightNode.id}`);
+                    } catch (err) {
+                        // Ignore (rightNode is not yet connected)
+                    }
                 }
                 break;
             case 'ELECTED':
@@ -326,6 +342,7 @@ export class Node {
         this.slaveNodes = [];
         this.log(`HEALTH OF CIRCLE IS CORRUPTED!`);
 
+        // Start health re-check
         this.initHealthCheck();
     }
 
@@ -338,7 +355,8 @@ export class Node {
         return -1;
     }
 
-    private forwardMessage(msg: Message) {
+    private async forwardMessage(msg: Message) {
+        await sleep(200);
         try {
             // Overwrite fromId in message
             msg.payload.fromId = this.getId();
@@ -346,7 +364,7 @@ export class Node {
             Node.sendMessage(this.rightNode, msg);
             this.log(`Forwarded ${msg.action} to: ${this.rightNode.id}`);
         } catch (err) {
-            // Ignore (rightNode is not yet connected)
+            this.log(`Failed to forward message to: ${this.rightNode.id}`);
         }
     }
 
@@ -378,9 +396,10 @@ export class Node {
     }
 
     private async initLeaderElection() {
+        await sleep(3000);
         try {
             Node.sendMessage(this.rightNode, new Message('ELECTION', {
-                toBeElectedId: this.getId(),
+                toBeElectedId: this.id,
                 fromId: this.getId()
             }));
             this.log(`Sent ELECTION to: ${this.rightNode.id}`);
@@ -412,7 +431,7 @@ export class Node {
         return `Node ${this.getId()}`;
     }
 
-    private connectToNode(node: NodeReference) {
+    private connectToNode(node: NodeReference, slaveConnect: boolean = false) {
         // Do nothing when connection already exists
         if (node.socket)
             return;
@@ -424,7 +443,7 @@ export class Node {
             node.socket = ws;
             Node.sendMessage(node, new Message('HELLO', {
                 fromId: this.getId(),
-                watchMe: this.leader
+                watchMe: slaveConnect && this.leader
             }));
 
             // No need for Server->Client messages, yet
