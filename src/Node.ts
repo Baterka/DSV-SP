@@ -41,15 +41,27 @@ export class NodeId {
     }
 }
 
+export class SocketReference {
+    id: number;
+    socket: WebSocket;
+
+    constructor(socket: WebSocket, id: number = -1) {
+        this.socket = socket;
+        this.id = id;
+    }
+}
+
 /**
  * Reference to Node and WebSocket tunnel between
  */
 export class NodeReference {
     id: NodeId;
-    socket: WebSocket | undefined;
+    slave: boolean;
+    socket: SocketReference | undefined;
 
-    constructor(id: NodeId, socket?: WebSocket) {
+    constructor(id: NodeId, slave: boolean = false, socket?: SocketReference) {
         this.id = id;
+        this.slave = slave;
         this.socket = socket;
     }
 
@@ -209,11 +221,17 @@ export class Node {
     }
 
     private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
+        const self = this;
+
         socket.on('message', (msg: string) => this.onMessageServer(socket, msg));
 
-        socket.on('close', () => {
-            this.log(`Lost connection from: ${this.leftNode.id}`);
-            this.reportNodeFailure();
+        socket.on('close', function () {
+            self.log(`Lost connection from: ${self.leftNode.id}`);
+            try {
+                self.reportNodeFailure();
+            } catch (err) {
+                // Ignore (rightNode is not yet connected)
+            }
         });
     }
 
@@ -266,6 +284,7 @@ export class Node {
 
                 // If leader received back my REPORT message
                 if (payload.forId === this.getId()) {
+                    this.log("EVERYONE REPORTED TO ME!");
                     this.connectToSlaves(payload.slaves);
                 } else {
                     msg.payload.slaves.push(this.id);
@@ -273,7 +292,7 @@ export class Node {
                 }
                 break;
             case 'FAIL':
-                this.log(`Received FAIL from: ${payload.fromId}`);
+                this.log(`Received FAIL from: ${payload.fromId} ${JSON.stringify(payload)}`);
 
                 const originNodeId: NodeId = NodeId.fromJSON(payload.originNode);
 
@@ -299,26 +318,34 @@ export class Node {
                 const toBeElectedNodeId: NodeId = NodeId.fromJSON(payload.toBeElectedId);
 
                 // If toBeElected is larger than this, forward
-                if (toBeElectedNodeId.toNumber() > this.id.toNumber())
+                if (toBeElectedNodeId.toNumber() > this.id.toNumber()) {
+                    this.log(`Election message is larger.`);
                     this.forwardMessage(msg);
+                }
 
                 // If toBeElected is smalled than this
                 else if (toBeElectedNodeId.toNumber() < this.id.toNumber() && !this.electionParticipant) {
+                    this.log(`Election message is smaller and I am not participant, yet. Mark me as to be elected.`);
+                    this.electionParticipant = true;
                     msg.payload.toBeElectedId = this.id;
                     this.forwardMessage(msg);
                 }
 
                 // If toBeElected is equals to this, set myself as leader and inform others
                 else if (toBeElectedNodeId.toNumber() === this.id.toNumber()) {
+                    this.log(`I WAS ELECTED AS LEADER!`);
                     this.leader = true;
                     this.electionParticipant = false;
 
                     try {
                         Node.sendMessage(this.rightNode, new Message('ELECTED', {
                             newLeaderId: this.getId(),
+                            watchMe: true,
                             fromId: this.getId()
                         }));
                         this.log(`Sent ELECTED to: ${this.rightNode.id}`);
+
+                        this.initHealthCheck();
                     } catch (err) {
                         // Ignore (rightNode is not yet connected)
                     }
@@ -327,9 +354,15 @@ export class Node {
             case 'ELECTED':
                 this.log(`Received ELECTED from: ${payload.fromId}`);
 
-                // If my message about election, discard
-                if (payload.forId != this.getId())
+                // If this is my message about election, discard
+                if (payload.newLeaderId === this.getId())
                     return;
+
+                // If this node should watch leader
+                if(payload.watchMe) {
+                    this.watchingLeader = true;
+                    payload.watchMe = false;
+                }
 
                 this.electionParticipant = false;
                 this.forwardMessage(msg);
@@ -369,12 +402,15 @@ export class Node {
     }
 
     private connectToSlaves(slaves: { ipAddress: string, port: number } []) {
+
+        // Not implemented, yet
+        return;
+
         for (let slaveJSON of slaves) {
-            const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON));
+            const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON), true);
             this.slaveNodes.push(slave);
             this.connectToNode(slave);
         }
-        this.log("EVERYONE REPORTED TO ME!");
     }
 
     private async initHealthCheck() {
@@ -398,6 +434,7 @@ export class Node {
     private async initLeaderElection() {
         await sleep(3000);
         try {
+            this.electionParticipant = true;
             Node.sendMessage(this.rightNode, new Message('ELECTION', {
                 toBeElectedId: this.id,
                 fromId: this.getId()
@@ -410,8 +447,8 @@ export class Node {
         // Election message timeout
         await sleep(2000);
 
-        // If ELECTION message not received, send new
-        if (!this.leader)
+        // If ELECTION or ELECTED message not received, send new
+        if (this.electionParticipant)
             this.initLeaderElection();
     }
 
@@ -440,7 +477,7 @@ export class Node {
         const ws = new WebSocket(`ws://${node.id}`);
 
         ws.on('open', () => {
-            node.socket = ws;
+            node.socket = new SocketReference(ws);
             Node.sendMessage(node, new Message('HELLO', {
                 fromId: this.getId(),
                 watchMe: slaveConnect && this.leader
@@ -501,7 +538,7 @@ export class Node {
 
     private static sendMessage(node: NodeReference, msg: Message) {
         if (node.socket)
-            return node.socket.send(JSON.stringify(msg));
+            return node.socket.socket.send(JSON.stringify(msg));
         else
             throw new Error(`rightNode's socket reference does not exists.`);
     }
