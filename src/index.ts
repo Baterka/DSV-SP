@@ -3,31 +3,28 @@ import * as yargs from 'yargs';
 
 interface Arguments {
     [x: string]: unknown;
-
+    ip: string | undefined;
     port: number | undefined;
-    //leftPort: number | undefined;
+    rightIp: string | undefined;
     rightPort: number | undefined;
     leader: boolean | undefined;
 }
 
 const argv: Arguments = yargs.options({
+    ip: {type: 'string'},
     port: {type: 'number'},
-    //leftPort: {type: 'number'},
+    rightIp: {type: 'string'},
     rightPort: {type: 'number'},
     leader: {type: 'boolean'},
 }).argv;
 
-// Default IP address for testing
-const defaultIpAddress = '127.0.0.1';
-
-if (!argv.port /*|| !argv.leftPort*/ || !argv.rightPort) {
+if (!argv.ip || !argv.port || !argv.rightIp || !argv.rightPort) {
     console.log('Invalid arguments!');
     process.exit();
 }
 
-const node = new NodeId(defaultIpAddress, argv.port);
-// const leftNode = new NodeId(defaultIpAddress, argv.leftPort);
-const rightNode = new NodeId(defaultIpAddress, argv.rightPort);
+const node = new NodeId(argv.ip, argv.port);
+const rightNode = new NodeId(argv.rightIp, argv.rightPort);
 
 // Fork node
-new Node(/*leftNode, */rightNode, node, !!argv.leader);
+new Node(rightNode, node, !!argv.leader);

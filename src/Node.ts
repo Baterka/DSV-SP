@@ -682,14 +682,16 @@ export class Node {
             //ws.on('message', (rawMsg: string) => this.onMessageClient(ws, rawMsg));
         });
 
-        ws.on('error', err => {
+        ws.on('error', async err => {
             node.socket = undefined;
+            this.log(`Error connecting to: ${node.id}`);
+            await sleep(1000);
             this.connectToNode(node);
         });
 
         ws.on('close', async () => {
             node.socket = undefined;
-            this.log(`Lost connection to: ${node.id}`);
+            //this.log(`Lost connection to: ${node.id}`);
         });
     }
 
