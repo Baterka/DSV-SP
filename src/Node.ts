@@ -3,9 +3,9 @@ import Http from "http";
 import Express from 'express';
 import bodyParser from 'body-parser';
 import Debug from 'debug';
-import Colors, {Color} from 'colors';
+import Colors from 'colors';
 import {sleep, ip2int, nodeRootPage} from "./helpers";
-import {parse} from "ts-node";
+import axios from 'axios';
 
 const colors: any = Colors;
 
@@ -62,6 +62,9 @@ export class NodeId {
     }
 }
 
+/**
+ * Identification of WebSocket
+ */
 export class SocketReference {
     id: number;
     socket: WebSocket;
@@ -77,17 +80,15 @@ export class SocketReference {
  */
 export class NodeReference {
     id: NodeId;
-    slave: boolean;
     socket: SocketReference | undefined;
 
-    constructor(id: NodeId, slave: boolean = false, socket?: SocketReference) {
+    constructor(id: NodeId, socket?: SocketReference) {
         this.id = id;
-        this.slave = slave;
         this.socket = socket;
     }
 
-    toString(): string {
-        return `${this.id} ${this.socket ? 'CONNECTED' : 'DISCONNECTED'}`;
+    toString(connInfo: boolean = false): string {
+        return `${this.id} ${connInfo ? this.socket ? 'CONNECTED' : 'DISCONNECTED' : ''}`;
     }
 }
 
@@ -122,12 +123,13 @@ export class Message {
     }
 }
 
+/**
+ * Node instance definition
+ */
 export class Node {
     id: NodeId;
 
-    //leftNode: NodeReference;
     rightNode: NodeReference;
-    masterNode: NodeReference | undefined;
 
     leader: boolean;
     watchingLeader: boolean;
@@ -146,12 +148,12 @@ export class Node {
     wsServer: WebSocket.Server | undefined;
 
     sharedVariable: any;
-    sharedVariableTimeout: number | undefined;
-    sharedVariableResolve: Function | undefined;
 
     signedIn: boolean;
 
     nextDisconnectIsNotFail: boolean;
+
+    leaderId: NodeId | undefined;
 
     constructor(/*leftNodeId: NodeId, */rightNodeId: NodeId, nodeId: NodeId = new NodeId('127.0.0.1', 3000), isLeader = false) {
         this.id = nodeId;
@@ -174,6 +176,9 @@ export class Node {
         this.signedIn = true;
 
         this.nextDisconnectIsNotFail = false;
+
+        if (isLeader)
+            this.leaderId = nodeId;
 
         this.startServer();
     }
@@ -227,39 +232,44 @@ export class Node {
         });
 
         // Set shared variable
-        app.post('/variable/set', async (req: Express.Request, res: Express.Response) => {
+        app.post('/variable', async (req: Express.Request, res: Express.Response) => {
+            try {
+                const variable = req.body.variable || undefined;
+                const fromId = req.body.fromId;
 
-            let success = true;
-            let error = undefined;
-            const variable = req.body.variable;
+                if (!fromId && !this.leader)
+                    return res.json({
+                        success: false,
+                        error: 'I am not leader'
+                    });
+                if (fromId && (!this.leaderId || fromId != this.leaderId.toString())) {
+                    return res.json({
+                        success: false,
+                        error: 'Not from leader'
+                    });
+                }
 
-            if (!this.leader)
+                if (this.leader && !this.circleHealthy)
+                    return res.json({
+                        success: false,
+                        error: 'Not healthy'
+                    });
+
+                if (!await this.setSharedVariable(variable))
+                    return res.json({
+                        success: false,
+                        error: 'Propagation failed'
+                    });
+
+                res.json({
+                    success: true
+                });
+            } catch (eee) {
                 return res.json({
                     success: false,
-                    error: 'Not leader'
+                    error: 'Unexpected error'
                 });
-
-            if (!this.circleHealthy)
-                return res.json({
-                    success: false,
-                    error: 'Not healthy'
-                });
-
-            if (!variable)
-                return res.json({
-                    success: false,
-                    error: 'Invalid input'
-                });
-
-            if (!await this.setSharedVariable(variable))
-                return res.json({
-                    success: false,
-                    error: 'Propagation failed after 3 tries'
-                });
-
-            res.json({
-                success: true
-            });
+            }
         });
 
         // Sign-out from circle
@@ -286,7 +296,6 @@ export class Node {
         });
 
         // Sign-in to circle
-        // Sign-out from circle
         app.get('/signin', (req: Express.Request, res: Express.Response) => {
             if (this.rightNode.socket || this.signedIn)
                 return res.json({
@@ -304,38 +313,37 @@ export class Node {
         });
     }
 
-    private async setSharedVariable(variable: any, tries: number = 0): Promise<any> {
-        if (tries < 3) {
-            this.sendVariable(variable);
-            const wait = () => new Promise(resolve => {
-                this.sharedVariableResolve = resolve;
-                this.sharedVariableTimeout = setTimeout(this.sharedVariableResolve, 3000);
-            });
-            await wait();
-
-            if (this.sharedVariable !== variable)
-                this.setSharedVariable(variable, tries++);
-
+    private async setSharedVariable(variable: any): Promise<boolean> {
+        if (!this.leader || await this.propagateVariable(variable, true)) {
+            this.sharedVariable = variable;
             return true;
-        } else
-            return false;
+        }
+
+        this.log(`Variable propagation failed. Recovering...`);
+        await this.propagateVariable(this.sharedVariable);
+        return false;
     }
 
-    private sendVariable(variable: any) {
-        Node.sendMessage(this.rightNode, new Message('VARIABLE', {
-            forId: this.getId(),
-            fromId: this.getId(),
-            variable
-        }));
-        this.log(`Sent VARIABLE to: ${this.rightNode.id}`);
-    }
+    private async propagateVariable(variable: any, failOnFirst: boolean = false): Promise<boolean> {
+        let success: boolean = true;
+        for (let slave of this.slaveNodes) {
+            try {
+                const res = await axios.post('http://' + slave.id.toString() + '/variable', {
+                    variable,
+                    fromId: this.getId()
+                });
+                if (!res.data.success)
+                    throw `Received variable set failure from: ${slave.id.toString()}`;
 
-    private signIn() {
-
-    }
-
-    private signOut() {
-
+                this.log(`Propagated successfully to: ${slave.id.toString()}`);
+            } catch (err) {
+                this.log(colors.error(err.toString()));
+                success = false;
+                if (failOnFirst)
+                    return false;
+            }
+        }
+        return success;
     }
 
     private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
@@ -414,6 +422,7 @@ export class Node {
                     // Let all other nodes report to this leader node
                     Node.sendMessage(this.rightNode, new Message('REPORT', {
                         fromId: this.getId(),
+                        leaderId: this.getId(),
                         forId: this.getId(),
                         slaves: []
                     }));
@@ -423,9 +432,13 @@ export class Node {
             case 'REPORT':
                 this.log(`Received REPORT from: ${payload.fromId}`);
 
+
+                // Set leader reference
+                if (payload.leaderId)
+                    this.leaderId = NodeId.fromString(payload.leaderId);
+
                 // If leader received back my REPORT message
                 if (payload.forId === this.getId()) {
-                    this.log(colors.info(`EVERYONE REPORTED TO ME!`));
                     this.connectToSlaves(payload.slaves);
                 } else {
                     msg.payload.slaves.push(this.id);
@@ -433,7 +446,7 @@ export class Node {
                 }
                 break;
             case 'FAIL':
-                this.log(`Received FAIL from: ${payload.fromId} ${JSON.stringify(payload)}`);
+                this.log(`Received FAIL from: ${payload.fromId}`);
 
                 const originNodeId: NodeId = NodeId.fromJSON(payload.originNode);
 
@@ -516,21 +529,8 @@ export class Node {
                 }
 
                 this.electionParticipant = false;
-                this.forwardMessage(msg);
-                break;
-            case 'VARIABLE':
-                this.log(`Received VARIABLE from: ${payload.fromId}`);
 
-                this.sharedVariable = payload.variable;
-
-                // If this is my message, discard
-                if (payload.forId === this.getId()) {
-                    if (this.sharedVariableResolve && this.sharedVariableTimeout) {
-                        this.sharedVariableResolve();
-                        clearTimeout(this.sharedVariableTimeout);
-                    }
-                    return;
-                }
+                this.leaderId = NodeId.fromString(payload.newLeaderId);
 
                 this.forwardMessage(msg);
                 break;
@@ -581,17 +581,7 @@ export class Node {
         this.initHealthCheck();
     }
 
-    private findSlaveIndex(id: NodeId): number {
-        for (let i = 0; i < this.slaveNodes.length; i++) {
-            if (this.slaveNodes[i].id == id)
-                return i;
-        }
-
-        return -1;
-    }
-
     private async forwardMessage(msg: Message) {
-        await sleep(200);
         try {
             // Overwrite fromId in message
             msg.payload.fromId = this.getId();
@@ -604,15 +594,13 @@ export class Node {
     }
 
     private connectToSlaves(slaves: { ipAddress: string, port: number } []) {
-
-        // Not implemented, yet
-        return;
-
+        this.slaveNodes = [];
         for (let slaveJSON of slaves) {
-            const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON), true);
+            const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON));
             this.slaveNodes.push(slave);
             this.connectToNode(slave);
         }
+        this.log(colors.info(`EVERYONE REPORTED TO ME!`));
     }
 
     private async initHealthCheck() {
@@ -634,7 +622,7 @@ export class Node {
     }
 
     private async initLeaderElection() {
-        await sleep(3000);
+        await sleep(1000);
         try {
             this.electionParticipant = true;
             Node.sendMessage(this.rightNode, new Message('ELECTION', {

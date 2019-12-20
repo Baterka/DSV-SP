@@ -67,7 +67,7 @@ export function nodeRootPage(node: Node) {
             </tr>-->
             <tr>
                 <td><b>rightNode:</b></td>
-                <td>${node.rightNode}</td>
+                <td>${node.rightNode.toString(true)}</td>
             </tr>
             <tr>
                 <td><b>Variable:</b></td>
