@@ -1,7 +1,7 @@
 # DSV-Semestralka
 Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním semestru 2019.
 
-## Task
+# Task
 **Shared variable**
 - Implement a program to access the shared variable..
 - Realize access using either a 'leader' or exclusive system-wide access.
@@ -13,8 +13,8 @@ Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním seme
 
 *(Translated from Czech original)*
 
-## Implementation
-### Overview
+# Implementation
+## Overview
 - **Written in:** [TypeScript](https://www.typescriptlang.org/) (transpiled into JavaScript)
 - **Runtime Environment:** [Node.js](https://nodejs.org/en/)
 -  **Libraries used:**
@@ -24,11 +24,11 @@ Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním seme
    - [debug](https://www.npmjs.com/package/debug) - debugging utility
    - and more... *(Check [package.json](https://github.com/Baterka/DSV-Semestralka/blob/master/package.json))*
   - **Algorithm:** [Chang and Roberts](https://en.wikipedia.org/wiki/Chang_and_Roberts_algorithm) - ring-based coordinator election algorithm
-### Topology description
+## Topology description
 [TODO]
-### Classes description
+## Classes description
 [TODO]
-### [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference.ts)
+## [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference.ts)
 
 # Installation
 1) Clone repository
