@@ -28,57 +28,7 @@ Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním seme
 [TODO]
 ### Classes description
 [TODO]
-### Node's API
-*All endpoints require and respond with media type `application/json`.*
-
-#### **GET /** - Overview *(All main information about Node)*
-Request:
-```javascript
-<empty>
-```
- Response:
-```javascript
-{
-	node: string<NodeId>,
-	rightNode: string<NodeId>,
-	variable: any
-	signedIn: boolean,
-	leader: boolean,
-	circleHealthy: boolean,
-	slaves: string<NodeId>[]
-}
-```
-	
-**GET /variable** - Get variable saved in Node
-Request:
-```javascript
-<empty>
-```
- Response:
-```javascript
-{
-	success: boolean,
-	error?: string,
-	variable?: any
-}
-```
- 
-**POST /variable** - Set variable into Node
-Request:
-```javascript
-{
-	variable: any,
-	fromId?: string(NodeId)
-}
-```
- Response:
-```javascript
-{
-	success: boolean,
-	error?: string,
-	variable?: any
-}
-```
+### [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference.ts)
 
 # Installation
 1) Clone repository
