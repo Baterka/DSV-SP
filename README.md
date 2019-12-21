@@ -26,8 +26,6 @@ Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním seme
   - **Algorithm:** [Chang and Roberts](https://en.wikipedia.org/wiki/Chang_and_Roberts_algorithm) - ring-based coordinator election algorithm
 ## Topology description
 [TODO]
-## Classes description
-[TODO]
 ## [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference.ts)
 
 # Installation
