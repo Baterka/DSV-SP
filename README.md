@@ -1,4 +1,4 @@
-# DSV-Semestralka
+# DSV-SP
 Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/education/bk/predmety/31/31/p3131406.html)** on **[FEE CTU](https://www.fel.cvut.cz/)** in winter semester 2019.
 
 # Task
