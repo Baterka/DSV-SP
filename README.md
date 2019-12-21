@@ -1,5 +1,5 @@
 # DSV-Semestralka
-Semestral project for the subject **B6B32DSV** on **[FEE CTU](https://www.fel.cvut.cz/)** in winter semester 2019.
+Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/education/bk/predmety/31/31/p3131406.html)** on **[FEE CTU](https://www.fel.cvut.cz/)** in winter semester 2019.
 
 # Task
 **Shared variable**
@@ -24,9 +24,8 @@ Semestral project for the subject **B6B32DSV** on **[FEE CTU](https://www.fel.cv
    - [debug](https://www.npmjs.com/package/debug) - debugging utility
    - and more... *(Check [package.json](https://github.com/Baterka/DSV-Semestralka/blob/master/package.json))*
   - **Algorithm:** [Chang and Roberts](https://en.wikipedia.org/wiki/Chang_and_Roberts_algorithm) - ring-based coordinator election algorithm
-## Topology description
-[TODO]
-## [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference.ts)
+## [Topology description](https://github.com/Baterka/DSV-Semestralka/wiki/Topology-description)
+## [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference)
 
 # Installation
 1) Clone repository
