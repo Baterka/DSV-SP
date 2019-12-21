@@ -1,5 +1,5 @@
-import {Node, NodeId, NodeReference} from "./Node";
 import * as yargs from 'yargs';
+import {Node, NodeId} from "./classes";
 
 interface Arguments {
     [x: string]: unknown;

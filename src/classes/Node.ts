@@ -4,11 +4,14 @@ import Express from 'express';
 import bodyParser from 'body-parser';
 import Debug from 'debug';
 import Colors from 'colors';
-import {sleep, ip2int, nodeRootPage} from "./helpers";
+import {sleep} from "../helpers";
 import axios from 'axios';
+import NodeId from './NodeId';
+import NodeReference from "./NodeReference";
+import Message from "./Message";
+import SocketId from "./SocketId";
 
 const colors: any = Colors;
-
 colors.setTheme({
     info: 'green',
     warn: 'yellow',
@@ -17,116 +20,9 @@ colors.setTheme({
 });
 
 /**
- * Identification of Node
- */
-export class NodeId {
-    ipAddress: string;
-    port: number;
-    size: number;
-
-    constructor(ipAddress: string, port: number) {
-        this.ipAddress = ipAddress;
-        this.port = port;
-
-        this.size = parseInt('' + ip2int(ipAddress) + port);
-    }
-
-    toString(): string {
-        return this.ipAddress + ':' + this.port;
-    }
-
-    toJSON(): {} {
-        return {
-            ipAddress: this.ipAddress,
-            port: this.port,
-        }
-    }
-
-    toNumber() {
-        return this.size;
-    }
-
-    /**
-     * Deserialize from JSON into class
-     */
-    static fromJSON(json: { ipAddress: string, port: number }): NodeId {
-        return new NodeId(json.ipAddress, json.port);
-    }
-
-    /**
-     * Deserialize from string into class
-     */
-    static fromString(string: string): NodeId {
-        const split = string.split(':');
-        return new NodeId(split[0], parseInt(split[1]));
-    }
-}
-
-/**
- * Identification of WebSocket
- */
-export class SocketReference {
-    id: number;
-    socket: WebSocket;
-
-    constructor(socket: WebSocket, id: number = -1) {
-        this.socket = socket;
-        this.id = id;
-    }
-}
-
-/**
- * Reference to Node and WebSocket tunnel between
- */
-export class NodeReference {
-    id: NodeId;
-    socket: SocketReference | undefined;
-
-    constructor(id: NodeId, socket?: SocketReference) {
-        this.id = id;
-        this.socket = socket;
-    }
-
-    toString(connInfo: boolean = false): string {
-        return `${this.id} ${connInfo ? this.socket ? 'CONNECTED' : 'DISCONNECTED' : ''}`;
-    }
-}
-
-/**
- * Message transferred between Nodes over WebSocket
- */
-export class Message {
-    action: string;
-    payload: any;
-
-    constructor(action: string = '', payload: {} = {}) {
-        this.action = action;
-        this.payload = payload;
-    }
-
-    toJSON(): {} {
-        return {
-            action: this.action,
-            payload: this.payload
-        }
-    }
-
-    static makeMessage(string: string): Message {
-        try {
-            const msg: { action: string, payload: {} } = JSON.parse(string);
-            if (msg.action && msg.payload)
-                return new Message(msg.action, msg.payload);
-            return new Message();
-        } catch (err) {
-            return new Message();
-        }
-    }
-}
-
-/**
  * Node instance definition
  */
-export class Node {
+export default class Node {
     id: NodeId;
 
     rightNode: NodeReference;
@@ -155,10 +51,9 @@ export class Node {
 
     leaderId: NodeId | undefined;
 
-    constructor(/*leftNodeId: NodeId, */rightNodeId: NodeId, nodeId: NodeId = new NodeId('127.0.0.1', 3000), isLeader = false) {
+    constructor(rightNodeId: NodeId, nodeId: NodeId = new NodeId('127.0.0.1', 3000), isLeader: boolean = false) {
         this.id = nodeId;
 
-        //this.leftNode = new NodeReference(leftNodeId);
         this.rightNode = new NodeReference(rightNodeId);
 
         this.leader = isLeader;
@@ -169,6 +64,7 @@ export class Node {
         this.slaveNodes = [];
 
         this.circleHealthy = false;
+        this.sharedVariable = null;
 
         this.Log = Debug(this.toString());
         this.log = (msg: string) => this.Log(`[${new Date().toISOString()}] ${msg}`);
@@ -186,6 +82,7 @@ export class Node {
     private startServer() {
 
         this.expressApp = Express();
+
         // Create HTTP server
         this.httpServer = Http.createServer(this.expressApp);
 
@@ -214,7 +111,17 @@ export class Node {
 
         // Information about node (for debugging purposes)
         app.get('/', (req: Express.Request, res: Express.Response) => {
-            res.send(nodeRootPage(this));
+            res.json({
+                node: this.getId(),
+                rightNode: this.rightNode.toString(true),
+                variable: this.sharedVariable,
+                signedIn: this.signedIn,
+                leader: this.leader,
+                ...this.leader ? {
+                    circleHealthy: this.circleHealthy,
+                    slaves: this.slaveNodes.map(slave => slave.toString())
+                } : {}
+            });
         });
 
         // Get shared variable
@@ -346,7 +253,7 @@ export class Node {
         return success;
     }
 
-    private onConnection(socket: WebSocket, req: Http.IncomingMessage) {
+    private onConnection(socket: WebSocket, req: Http.IncomingMessage): void {
         const self = this;
 
         socket.on('message', (msg: string) => this.onMessageServer(socket, msg));
@@ -364,7 +271,7 @@ export class Node {
         });
     }
 
-    private onMessageServer(socket: WebSocket, rawMsg: string) {
+    private onMessageServer(socket: WebSocket, rawMsg: string): void {
         const msg: Message = Message.makeMessage(rawMsg);
         if (!msg.action)
             return this.log(
@@ -379,9 +286,6 @@ export class Node {
 
         switch (msg.action) {
             case 'HELLO':
-                // Set reference to left node
-                //this.leftNode = new NodeReference(payload.id, socket);
-
                 this.log(`Received HELLO from: ${payload.fromId}`);
 
                 // Leader can start first HEALTH check
@@ -569,10 +473,13 @@ export class Node {
                 this.log(`Received LEAVING from: ${payload.fromId}`);
                 this.nextDisconnectIsNotFail = true;
                 break;
+            default:
+                this.log(`Received unknown action (${msg.action}) from: ${rawMsg}`);
+                break;
         }
     }
 
-    private setHealthCorrupted() {
+    private setHealthCorrupted(): void {
         this.circleHealthy = false;
         this.slaveNodes = [];
         this.log(colors.warn(`HEALTH OF CIRCLE IS CORRUPTED!`));
@@ -581,7 +488,7 @@ export class Node {
         this.initHealthCheck();
     }
 
-    private async forwardMessage(msg: Message) {
+    private forwardMessage(msg: Message): void {
         try {
             // Overwrite fromId in message
             msg.payload.fromId = this.getId();
@@ -593,7 +500,7 @@ export class Node {
         }
     }
 
-    private connectToSlaves(slaves: { ipAddress: string, port: number } []) {
+    private connectToSlaves(slaves: { ipAddress: string, port: number } []): void {
         this.slaveNodes = [];
         for (let slaveJSON of slaves) {
             const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON));
@@ -603,7 +510,7 @@ export class Node {
         this.log(colors.info(`EVERYONE REPORTED TO ME!`));
     }
 
-    private async initHealthCheck() {
+    private async initHealthCheck(): Promise<void> {
         if (this.circleHealthy)
             return;
 
@@ -621,7 +528,7 @@ export class Node {
             this.initHealthCheck();
     }
 
-    private async initLeaderElection() {
+    private async initLeaderElection(): Promise<void> {
         await sleep(1000);
         try {
             this.electionParticipant = true;
@@ -642,7 +549,7 @@ export class Node {
             this.initLeaderElection();
     }
 
-    private sendHealthCheck() {
+    private sendHealthCheck(): void {
         Node.sendMessage(this.rightNode, new Message('HEALTHY', {
             forId: this.getId(),
             fromId: this.getId()
@@ -650,7 +557,7 @@ export class Node {
         this.log(`Sent HEALTHY to: ${this.rightNode.id}`);
     }
 
-    private connectToNode(node: NodeReference, reconnect: boolean = false) {
+    private connectToNode(node: NodeReference, reconnect: boolean = false): void {
         // Do nothing when connection already exists
         if (node.socket)
             return;
@@ -659,15 +566,14 @@ export class Node {
         const ws = new WebSocket(`ws://${node.id}`);
 
         ws.on('open', () => {
-            node.socket = new SocketReference(ws);
+            node.socket = new SocketId(ws);
             Node.sendMessage(node, new Message('HELLO', {
                 fromId: this.getId(),
                 watchMe: this.leader,
                 reconnect
             }));
 
-            // No need for Server->Client messages, yet
-            //ws.on('message', (rawMsg: string) => this.onMessageClient(ws, rawMsg));
+            ws.on('message', (rawMsg: string) => this.onMessageClient(ws, rawMsg));
         });
 
         ws.on('error', async err => {
@@ -683,7 +589,7 @@ export class Node {
         });
     }
 
-    private reportNodeFailure() {
+    private reportNodeFailure(): void {
 
         if (this.leader)
             this.setHealthCorrupted();
@@ -707,7 +613,7 @@ export class Node {
         }
     }
 
-    private onMessageClient(socket: WebSocket, rawMsg: string) {
+    private onMessageClient(socket: WebSocket, rawMsg: string): void {
         const msg: Message = Message.makeMessage(rawMsg);
         if (!msg.action)
             return this.log(`Received unknown message from server: ${rawMsg}`);
@@ -716,7 +622,7 @@ export class Node {
 
         switch (msg.action) {
             default:
-                this.log(`Received unknown message from server.`);
+                this.log(`Received unknown action (${msg.action}) from server: ${rawMsg}`);
                 break;
         }
     }
@@ -728,11 +634,17 @@ export class Node {
             throw new Error(`rightNode's socket reference does not exists.`);
     }
 
-    getId() {
+    /**
+     * Get id of current Node
+     */
+    getId(): string {
         return this.id.toString();
     }
 
-    toString() {
+    /**
+     * Serialize from class instance into string
+     */
+    toString(): string {
         return `Node ${this.getId()}`;
     }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "dsv",
-  "version": "1.0.0",
+  "name": "dsv-sp",
+  "version": "1.0.1",
   "scripts": {
     "start": "cross-env DEBUG=\"Node*,Master,Client:*\" node build/index.js",
     "debug": "cross-env DEBUG=\"Node*,Master,Client:*\" ts-node src/index.ts",
