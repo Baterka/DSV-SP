@@ -1,5 +1,5 @@
 # DSV-Semestralka
-Semestrální projekt pro předmět **B6B32DSV** na **FEL ČVUT** v zimním semestru 2019.
+Semestral project for the subject **B6B32DSV** on **[FEE CTU](https://www.fel.cvut.cz/)** in winter semester 2019.
 
 # Task
 **Shared variable**
