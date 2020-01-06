@@ -26,6 +26,7 @@ Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/educat
   - **Algorithm:** [Chang and Roberts](https://en.wikipedia.org/wiki/Chang_and_Roberts_algorithm) - ring-based coordinator election algorithm
 ## [Topology description](https://github.com/Baterka/DSV-Semestralka/wiki/Topology-description)
 ## [API Reference](https://github.com/Baterka/DSV-Semestralka/wiki/API-Reference)
+## [Tests](https://github.com/Baterka/DSV-Semestralka/wiki/Tests)
 
 # Installation
 1) Clone repository
