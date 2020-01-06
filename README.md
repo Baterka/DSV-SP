@@ -21,7 +21,7 @@ Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/educat
    - [ws](https://www.npmjs.com/package/ws) - WebSocket server (and client)
    - [express](https://www.npmjs.com/package/express) - minimalist web server
    - [axios](https://www.npmjs.com/package/axios) - HTTP client
-   - [debug](https://www.npmjs.com/package/debug) - debugging utility
+   - [log4js](https://www.npmjs.com/package/log4js) - debugging utility
    - and more... *(Check [package.json](https://github.com/Baterka/DSV-Semestralka/blob/master/package.json))*
   - **Algorithm:** [Chang and Roberts](https://en.wikipedia.org/wiki/Chang_and_Roberts_algorithm) - ring-based coordinator election algorithm
 ## [Topology description](https://github.com/Baterka/DSV-Semestralka/wiki/Topology-description)
