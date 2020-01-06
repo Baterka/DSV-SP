@@ -1,5 +1,3 @@
-import {Node} from "./classes";
-
 /**
  * Shuffle array by Durstenfeld shuffle algorithm
  * @param array
