@@ -1,0 +1,600 @@
+{
+	"info": {
+		"_postman_id": "e0cf02bd-ab44-4c4a-9211-d8e26ffa1904",
+		"name": "DSV-SP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Node 1",
+			"item": [
+				{
+					"name": "GET /",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signout",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /variable",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /variable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"variable\": \"TEST\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Node 2",
+			"item": [
+				{
+					"name": "GET /",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signout",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /variable",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /variable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"variable\": \"TEST\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:3002/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3002",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Node 3",
+			"item": [
+				{
+					"name": "GET /",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signout",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /variable",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /variable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"variable\": \"TEST\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:3002/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3002",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Node 4",
+			"item": [
+				{
+					"name": "GET /",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signout",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /variable",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /variable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"variable\": \"TEST\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:3002/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3002",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Node 5",
+			"item": [
+				{
+					"name": "GET /",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signin",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /signout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/signout",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"signout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /variable",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}:3001/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3001",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /variable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"variable\": \"TEST\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:3005/variable",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "3005",
+							"path": [
+								"variable"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "73b74e10-03ae-4526-8ab0-b7623e294092",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "10bd4e92-1130-4630-abe2-d1104d767d4c",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "eb781fe5-00ee-45b7-bff0-92414306e92c",
+			"key": "URL",
+			"value": "http://localhost",
+			"type": "string"
+		}
+	],
+	"protocolProfileBehavior": {}
+}
