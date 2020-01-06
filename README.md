@@ -10,6 +10,10 @@ Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/educat
   - log off the system
   - exit without logging out
   - log in to the system
+- Log into both the console and the file.
+  - Logs will be stamped with a logical timestamp.
+- Each node will have a unique identification.
+  - A combination of IP address and port is recommended.
 
 *(Translated from Czech original)*
 
