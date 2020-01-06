@@ -44,4 +44,4 @@ Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/educat
 	- Edit `servers`,`username`,`password` variables in [`deploy.js`](https://github.com/Baterka/DSV-Semestralka/blob/master/deploy.js) file
 	- Run `yarn run deploy -- <tip>` *(\<tip> is template IP address)*
 	
-*(You can always use `npm` instead of `yarn`!)*
+*(You can always use `npm` instead of `yarn`)*
