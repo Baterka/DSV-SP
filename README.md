@@ -36,10 +36,11 @@ Semestral project for the subject **[B6B32DSV](https://www.fel.cvut.cz/en/educat
 1) Clone repository
 2) `cd DSV-Semestralka/`
 3) `npm install -g yarn` and `yarn install` *(or just use `npm install` without installing `yarn`)*
-- To build app into native JavaScript run `npm run build`
+- To build app into native JavaScript run `yarn run build`
 - To fork (start/spawn) Node run:
-	- `npm start -- <ARGUMENTS>` - Native JavaScript [(usage)](https://github.com/Baterka/DSV-SP/wiki)
-	- `npm run debug -- <ARGUMENTS>` - TypeScript by `ts-node` [(usage)](https://github.com/Baterka/DSV-SP/wiki)
+	- `yarn start -- <ARGUMENTS>` - Native JavaScript [(usage)](https://github.com/Baterka/DSV-SP/wiki)
+	- `yarn run debug -- <ARGUMENTS>` - TypeScript by `ts-node` [(usage)](https://github.com/Baterka/DSV-SP/wiki)
 - To deploy Nodes to different machines:
 	- Edit `servers`,`username`,`password` variables in [`deploy.js`](https://github.com/Baterka/DSV-Semestralka/blob/master/deploy.js) file
-	- Run `npm run deploy -- <tip>` *(\<tip> is template IP address)*
+	- Run `yarn run deploy -- <tip>` *(\<tip> is template IP address)*
+*(You can always use `npm` instead of `yarn`!)*
