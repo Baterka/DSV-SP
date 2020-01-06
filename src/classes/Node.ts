@@ -24,7 +24,7 @@ log4js.configure({
     },
     categories: {
         default: {
-            appenders: [ 'console', 'file' ],
+            appenders: ['console', 'file'],
             level: 'debug'
         }
     }
@@ -150,7 +150,7 @@ export default class Node {
         // Set shared variable
         app.post('/variable', async (req: Express.Request, res: Express.Response) => {
             try {
-                const variable = req.body.variable || undefined;
+                const variable = req.body.variable || null;
                 const fromId = req.body.fromId;
 
                 if (!fromId && !this.leader)
@@ -177,8 +177,10 @@ export default class Node {
                         error: 'Propagation failed'
                     });
 
+                this.log.info(`Variable changed to: ${typeof variable === 'object' ? JSON.stringify(variable) : variable}`);
                 res.json({
-                    success: true
+                    success: true,
+                    variable
                 });
             } catch (eee) {
                 return res.json({
@@ -206,6 +208,7 @@ export default class Node {
             this.rightNode.socket.socket.close();
             this.rightNode.socket = undefined;
 
+            this.log.info(`Signed-out from circle`);
             return res.json({
                 success: true
             });
@@ -223,6 +226,7 @@ export default class Node {
 
             this.connectToNode(this.rightNode, true);
 
+            this.log.info(`Signed-in to circle`);
             return res.json({
                 success: true,
             });
@@ -304,6 +308,7 @@ export default class Node {
                 if (payload.watchMe) {
                     this.log.info(`I AM WATCHING LEADER!`);
                     this.watchingLeader = true;
+                    payload.watchMe = false;
                 }
 
                 // My old ancestor reconnected (re-signed-in)
@@ -311,7 +316,7 @@ export default class Node {
                     if (this.leader)
                         this.setHealthCorrupted();
 
-                    Node.sendMessage(this.rightNode, new Message('RECONNECT', {
+                    this.sendMessage(this.rightNode, new Message('RECONNECT', {
                         fromId: this.getId(),
                         originNodeId: this.getId(),
 
@@ -330,7 +335,7 @@ export default class Node {
                     this.log.info(`CIRCLE IS HEALTHY!`);
 
                     // Let all other nodes report to this leader node
-                    Node.sendMessage(this.rightNode, new Message('REPORT', {
+                    this.sendMessage(this.rightNode, new Message('REPORT', {
                         fromId: this.getId(),
                         leaderId: this.getId(),
                         forId: this.getId(),
@@ -346,11 +351,16 @@ export default class Node {
 
                 // If leader received back my REPORT message
                 if (payload.forId === this.getId()) {
-                    this.connectToSlaves(payload.slaves);
-                } else {
-                    msg.payload.slaves.push(this.id);
-                    this.forwardMessage(msg);
+                    this.slaveNodes = [];
+                    for (let slaveJSON of payload.slaves) {
+                        const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON));
+                        this.slaveNodes.push(slave);
+                    }
+                    return this.log.info(`EVERYONE REPORTED TO ME!`);
                 }
+
+                msg.payload.slaves.push(this.id);
+                this.forwardMessage(msg);
                 break;
             case 'FAIL':
                 const originNodeId: NodeId = NodeId.fromJSON(payload.originNode);
@@ -361,7 +371,7 @@ export default class Node {
 
                 // Disconnect right node manually, if this is reconnect (fake fail)
                 if (payload.reconnect && this.rightNode.socket) {
-                    Node.sendMessage(this.rightNode, new Message('LEAVING', {
+                    this.sendMessage(this.rightNode, new Message('LEAVING', {
                         fromId: this.getId()
                     }));
                     this.log.debug(`Sent LEAVING to: ${this.rightNode.id}`);
@@ -405,7 +415,7 @@ export default class Node {
                     this.electionParticipant = false;
 
                     try {
-                        Node.sendMessage(this.rightNode, new Message('ELECTED', {
+                        this.sendMessage(this.rightNode, new Message('ELECTED', {
                             newLeaderId: this.getId(),
                             watchMe: true,
                             fromId: this.getId()
@@ -446,7 +456,7 @@ export default class Node {
                 if (payload.originNodeId === this.rightNode.id.toString()) {
                     // Disconnect right node manually
                     if (this.rightNode.socket) {
-                        Node.sendMessage(this.rightNode, new Message('LEAVING', {
+                        this.sendMessage(this.rightNode, new Message('LEAVING', {
                             fromId: this.getId()
                         }));
                         this.log.debug(`Sent LEAVING to: ${this.rightNode.id}`);
@@ -487,21 +497,11 @@ export default class Node {
             // Overwrite fromId in message
             msg.payload.fromId = this.getId();
 
-            Node.sendMessage(this.rightNode, msg);
+            this.sendMessage(this.rightNode, msg);
             this.log.debug(`Forwarded ${msg.action} to: ${this.rightNode.id}`);
         } catch (err) {
             this.log.error(`Failed to forward message to: ${this.rightNode.id}`);
         }
-    }
-
-    private connectToSlaves(slaves: { ipAddress: string, port: number } []): void {
-        this.slaveNodes = [];
-        for (let slaveJSON of slaves) {
-            const slave: NodeReference = new NodeReference(NodeId.fromJSON(slaveJSON));
-            this.slaveNodes.push(slave);
-            this.connectToNode(slave);
-        }
-        this.log.info(`EVERYONE REPORTED TO ME!`);
     }
 
     private async initHealthCheck(): Promise<void> {
@@ -526,7 +526,7 @@ export default class Node {
         await sleep(1000);
         try {
             this.electionParticipant = true;
-            Node.sendMessage(this.rightNode, new Message('ELECTION', {
+            this.sendMessage(this.rightNode, new Message('ELECTION', {
                 toBeElectedId: this.id,
                 fromId: this.getId()
             }));
@@ -544,7 +544,7 @@ export default class Node {
     }
 
     private sendHealthCheck(): void {
-        Node.sendMessage(this.rightNode, new Message('HEALTHY', {
+        this.sendMessage(this.rightNode, new Message('HEALTHY', {
             forId: this.getId(),
             fromId: this.getId()
         }));
@@ -561,7 +561,7 @@ export default class Node {
 
         ws.on('open', () => {
             node.socket = new SocketId(ws);
-            Node.sendMessage(node, new Message('HELLO', {
+            this.sendMessage(node, new Message('HELLO', {
                 fromId: this.getId(),
                 watchMe: this.leader,
                 reconnect
@@ -588,7 +588,7 @@ export default class Node {
         if (this.leader)
             this.setHealthCorrupted();
 
-        Node.sendMessage(this.rightNode, new Message('FAIL', {
+        this.sendMessage(this.rightNode, new Message('FAIL', {
             fromId: this.getId(),
 
             // Who reported fail
@@ -621,10 +621,11 @@ export default class Node {
         }
     }
 
-    private static sendMessage(node: NodeReference, msg: Message) {
-        if (node.socket)
+    private sendMessage(node: NodeReference, msg: Message) {
+        if (node.socket) {
+            this.log.debug(`Sent ${msg.action} to: ${node.id}`);
             return node.socket.socket.send(JSON.stringify(msg));
-        else
+        } else
             throw new Error(`rightNode's socket reference does not exists.`);
     }
 
