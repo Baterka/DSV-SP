@@ -3,6 +3,7 @@ import {Node, NodeId} from "./classes";
 
 interface Arguments {
     [x: string]: unknown;
+
     ip: string | undefined;
     port: number | undefined;
     rightIp: string | undefined;
@@ -19,7 +20,17 @@ const argv: Arguments = yargs.options({
 }).argv;
 
 if (!argv.ip || !argv.port || !argv.rightIp || !argv.rightPort) {
-    console.log('Invalid arguments!');
+    let missing = "";
+    for (let arg of [
+        'ip',
+        'port',
+        'rightIp',
+        'rightPort'
+    ]) {
+        if (!argv[arg])
+            missing += '--' + arg + (arg !== 'rightPort' ? ', ' : '');
+    }
+    console.log(`Missing arguments: ${missing}`);
     process.exit();
 }
 

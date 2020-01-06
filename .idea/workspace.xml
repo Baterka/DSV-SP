@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="63a2da6d-549b-4081-8203-81caecd2a6cc" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/classes/Node.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/classes/Node.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +45,7 @@
       <recent name="C:\Users\David\WebstormProjects\DSV-Semestralka" />
     </key>
   </component>
-  <component name="RunManager" selected="Compound.Debug All">
+  <component name="RunManager" selected="npm.build">
     <configuration name="Debug All" type="CompoundRunConfigurationType">
       <toRun name="Node 2" type="js.build_tools.npm" />
       <toRun name="Node 4" type="js.build_tools.npm" />
@@ -67,7 +68,7 @@
       <scripts>
         <script value="debug" />
       </scripts>
-      <arguments value="--ip=127.0.0.1 --port=3001 --rightIp=127.0.0.1 --rightPort=3002 --leader=true" />
+      <arguments value="-- --ip=127.0.0.1 --port=3001 --rightIp=127.0.0.1 --rightPort=3002 --leader=true" />
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
@@ -78,7 +79,7 @@
       <scripts>
         <script value="debug" />
       </scripts>
-      <arguments value="--ip=127.0.0.1 --port=3002 --rightIp=127.0.0.1 --rightPort=3003" />
+      <arguments value="-- --ip=127.0.0.1 --port=3002 --rightIp=127.0.0.1 --rightPort=3003" />
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
@@ -89,8 +90,9 @@
       <scripts>
         <script value="debug" />
       </scripts>
-      <arguments value="--ip=127.0.0.1 --port=3003 --rightIp=127.0.0.1 --rightPort=3004" />
+      <arguments value="-- --ip=127.0.0.1 --port=3003 --rightIp=127.0.0.1 --rightPort=3004" />
       <node-interpreter value="project" />
+      <package-manager value="npm" />
       <envs />
       <method v="2" />
     </configuration>
@@ -100,7 +102,7 @@
       <scripts>
         <script value="debug" />
       </scripts>
-      <arguments value="--ip=127.0.0.1 --port=3004 --rightIp=127.0.0.1 --rightPort=3005" />
+      <arguments value="-- --ip=127.0.0.1 --port=3004 --rightIp=127.0.0.1 --rightPort=3005" />
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
@@ -111,7 +113,7 @@
       <scripts>
         <script value="debug" />
       </scripts>
-      <arguments value="--ip=127.0.0.1 --port=3005 --rightIp=127.0.0.1 --rightPort=3001" />
+      <arguments value="-- --ip=127.0.0.1 --port=3005 --rightIp=127.0.0.1 --rightPort=3001" />
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
@@ -201,7 +203,7 @@
       <workItem from="1577055794954" duration="910000" />
       <workItem from="1578069951882" duration="365000" />
       <workItem from="1578071572345" duration="1650000" />
-      <workItem from="1578315018513" duration="4541000" />
+      <workItem from="1578315018513" duration="6197000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <created>1576182228724</created>
@@ -252,7 +254,21 @@
       <option name="project" value="LOCAL" />
       <updated>1578317139484</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Variable propagation fix + Postman &quot;tests&quot;">
+      <created>1578319748337</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1578319748337</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Variable propagation fix + Postman &quot;tests&quot;">
+      <created>1578319765749</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1578319765749</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -272,60 +288,61 @@
     <MESSAGE value="Changed shared variable propagation system to HTTP req-res based&#10;Node crash when propagating variable is now properly handled" />
     <MESSAGE value="General sweep&#10;All Express endpoints are JSON" />
     <MESSAGE value="Changed logging module and added logging into file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changed logging module and added logging into file" />
+    <MESSAGE value="Variable propagation fix + Postman &quot;tests&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="Variable propagation fix + Postman &quot;tests&quot;" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="405" y="213" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1578072010488">
+    <state x="483" y="145" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1578322832347">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="405" y="213" key="#com.intellij.execution.impl.EditConfigurationsDialog/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578072010488" />
+    <state x="483" y="145" key="#com.intellij.execution.impl.EditConfigurationsDialog/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578322832347" />
     <state x="398" y="181" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1739.939@0.0.1739.939" timestamp="1576709246068" />
     <state x="-1195" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1576938128257">
       <screen x="-1920" y="0" width="1920" height="1040" />
     </state>
     <state x="-1195" y="322" key="#com.intellij.fileTypes.FileTypeChooser/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1576938128257" />
-    <state x="168" y="7" width="1631" height="1021" key="CommitChangelistDialog2" timestamp="1578319746549">
+    <state x="168" y="7" width="1631" height="1021" key="CommitChangelistDialog2" timestamp="1578319765042">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="168" y="7" width="1631" height="1021" key="CommitChangelistDialog2/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319746549" />
+    <state x="168" y="7" width="1631" height="1021" key="CommitChangelistDialog2/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319765042" />
     <state x="530" y="103" key="CommitChangelistDialog2/0.0.1739.939@0.0.1739.939" timestamp="1576709555564" />
     <state x="-883" y="221" key="FileChooserDialogImpl" timestamp="1576964796173">
       <screen x="-1920" y="0" width="1920" height="1040" />
     </state>
     <state x="-883" y="221" key="FileChooserDialogImpl/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576964796173" />
-    <state width="1899" height="388" key="GridCell.Tab.0.bottom" timestamp="1578319599107">
+    <state width="1899" height="388" key="GridCell.Tab.0.bottom" timestamp="1578322893317">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1899" height="325" key="GridCell.Tab.0.bottom/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1576882589610" />
-    <state width="1899" height="388" key="GridCell.Tab.0.bottom/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319599107" />
+    <state width="1899" height="388" key="GridCell.Tab.0.bottom/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578322893317" />
     <state width="1718" height="196" key="GridCell.Tab.0.bottom/0.0.1739.939@0.0.1739.939" timestamp="1576709556226" />
-    <state width="1899" height="388" key="GridCell.Tab.0.center" timestamp="1578319599107">
+    <state width="1899" height="388" key="GridCell.Tab.0.center" timestamp="1578322893317">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1899" height="325" key="GridCell.Tab.0.center/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1576882589610" />
-    <state width="1899" height="388" key="GridCell.Tab.0.center/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319599107" />
+    <state width="1899" height="388" key="GridCell.Tab.0.center/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578322893317" />
     <state width="1718" height="196" key="GridCell.Tab.0.center/0.0.1739.939@0.0.1739.939" timestamp="1576709556226" />
-    <state width="1899" height="388" key="GridCell.Tab.0.left" timestamp="1578319599107">
+    <state width="1899" height="388" key="GridCell.Tab.0.left" timestamp="1578322893317">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1899" height="325" key="GridCell.Tab.0.left/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1576882589610" />
-    <state width="1899" height="388" key="GridCell.Tab.0.left/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319599107" />
+    <state width="1899" height="388" key="GridCell.Tab.0.left/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578322893317" />
     <state width="1718" height="196" key="GridCell.Tab.0.left/0.0.1739.939@0.0.1739.939" timestamp="1576709556226" />
-    <state width="1899" height="388" key="GridCell.Tab.0.right" timestamp="1578319599107">
+    <state width="1899" height="388" key="GridCell.Tab.0.right" timestamp="1578322893317">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1899" height="325" key="GridCell.Tab.0.right/-1920.0.1920.1040/0.0.1920.1040@-1920.0.1920.1040" timestamp="1576882589610" />
-    <state width="1899" height="388" key="GridCell.Tab.0.right/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319599107" />
+    <state width="1899" height="388" key="GridCell.Tab.0.right/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578322893317" />
     <state width="1718" height="196" key="GridCell.Tab.0.right/0.0.1739.939@0.0.1739.939" timestamp="1576709556226" />
     <state x="323" y="91" key="SettingsEditor" timestamp="1578315542173">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="323" y="91" key="SettingsEditor/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578315542173" />
     <state x="293" y="82" key="SettingsEditor/0.0.1739.939@0.0.1739.939" timestamp="1576709542777" />
-    <state x="552" y="252" key="Vcs.Push.Dialog.v2" timestamp="1578319752826">
+    <state x="552" y="252" key="Vcs.Push.Dialog.v2" timestamp="1578319767575">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="252" key="Vcs.Push.Dialog.v2/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319752826" />
+    <state x="552" y="252" key="Vcs.Push.Dialog.v2/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1578319767575" />
     <state x="500" y="228" key="Vcs.Push.Dialog.v2/0.0.1739.939@0.0.1739.939" timestamp="1576709356959" />
     <state x="92" y="92" width="1736" height="856" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1578319378142">
       <screen x="0" y="0" width="1920" height="1040" />
