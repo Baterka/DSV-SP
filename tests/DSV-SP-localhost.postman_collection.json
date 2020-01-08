@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "e0cf02bd-ab44-4c4a-9211-d8e26ffa1904",
-		"name": "DSV-SP",
+		"_postman_id": "ff133506-5afe-4e80-8aa6-97673e14a8ba",
+		"name": "DSV-SP (localhost)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -126,11 +126,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/",
+							"raw": "{{URL}}:3002/",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3002",
 							"path": [
 								""
 							]
@@ -144,11 +144,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signin",
+							"raw": "{{URL}}:3002/signin",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3002",
 							"path": [
 								"signin"
 							]
@@ -162,11 +162,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signout",
+							"raw": "{{URL}}:3002/signout",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3002",
 							"path": [
 								"signout"
 							]
@@ -180,11 +180,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/variable",
+							"raw": "{{URL}}:3002/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3002",
 							"path": [
 								"variable"
 							]
@@ -238,11 +238,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/",
+							"raw": "{{URL}}:3003/",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3003",
 							"path": [
 								""
 							]
@@ -274,11 +274,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signout",
+							"raw": "{{URL}}:3003/signout",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3003",
 							"path": [
 								"signout"
 							]
@@ -292,11 +292,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/variable",
+							"raw": "{{URL}}:3003/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3003",
 							"path": [
 								"variable"
 							]
@@ -326,11 +326,11 @@
 							}
 						},
 						"url": {
-							"raw": "{{URL}}:3002/variable",
+							"raw": "{{URL}}:3003/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3002",
+							"port": "3003",
 							"path": [
 								"variable"
 							]
@@ -350,11 +350,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/",
+							"raw": "{{URL}}:3004/",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3004",
 							"path": [
 								""
 							]
@@ -368,11 +368,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signin",
+							"raw": "{{URL}}:3004/signin",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3004",
 							"path": [
 								"signin"
 							]
@@ -386,11 +386,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signout",
+							"raw": "{{URL}}:3004/signout",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3004",
 							"path": [
 								"signout"
 							]
@@ -404,11 +404,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/variable",
+							"raw": "{{URL}}:3004/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3004",
 							"path": [
 								"variable"
 							]
@@ -438,11 +438,11 @@
 							}
 						},
 						"url": {
-							"raw": "{{URL}}:3002/variable",
+							"raw": "{{URL}}:3004/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3002",
+							"port": "3004",
 							"path": [
 								"variable"
 							]
@@ -462,11 +462,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/",
+							"raw": "{{URL}}:3005/",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3005",
 							"path": [
 								""
 							]
@@ -480,11 +480,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signin",
+							"raw": "{{URL}}:3005/signin",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3005",
 							"path": [
 								"signin"
 							]
@@ -498,11 +498,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/signout",
+							"raw": "{{URL}}:3005/signout",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3005",
 							"path": [
 								"signout"
 							]
@@ -516,11 +516,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{URL}}:3001/variable",
+							"raw": "{{URL}}:3005/variable",
 							"host": [
 								"{{URL}}"
 							],
-							"port": "3001",
+							"port": "3005",
 							"path": [
 								"variable"
 							]

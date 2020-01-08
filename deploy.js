@@ -39,7 +39,6 @@ const servers = [
 ];
 
 const remoteDir = '/root/DSV/';
-const filesToDeploy = fs.readdirSync('build/');
 const startScript = server => Buffer.from(`
 #!/bin/sh
 
@@ -57,7 +56,7 @@ npm install yarn -g
 yarn install
 
 # Run Node
-npm run fork -- --ip=${ipAddress(server.id)} --port=${defaultPort} --rightIp=${ipAddress(server.rightNode)} --rightPort=${defaultPort} ${server.leader ? '--leader=true' : ''}
+npm start -- --ip=${ipAddress(server.id)} --port=${defaultPort} --rightIp=${ipAddress(server.rightNode)} --rightPort=${defaultPort} ${server.leader ? '--leader=true' : ''}
 `, 'utf-8');
 
 const deployToServer = async server => {
@@ -73,13 +72,9 @@ const deployToServer = async server => {
     } catch (err) {
         //console.log('Nothing to delete...');
     }
-    await sftp.mkdir(remoteDir + 'build/', true);
 
-    for (let i in filesToDeploy) {
-        const file = filesToDeploy[i];
-        //console.log(`Uploading '${file}'...`);
-        await sftp.put('build/' + file, remoteDir + 'build/' + file);
-    }
+    await putDir(sftp, 'build/');
+
     await sftp.put('package.json', remoteDir + 'package.json');
     await sftp.put(startScript(server), remoteDir + 'start.sh', {
         mode: 0o777 // Make file executable
@@ -87,6 +82,18 @@ const deployToServer = async server => {
 
     console.log(`Deployed!`);
     await sftp.end();
+};
+
+// Put directory into to remote
+const putDir = async (sftp, path) => {
+    await sftp.mkdir(remoteDir + path, true);
+    for (let file of fs.readdirSync(path, {withFileTypes: true})) {
+        if (file['isFile']()) {
+            await sftp.put(path + file.name, remoteDir + path + file.name);
+            console.log('PUT ' + path + file.name + ' -> ' + remoteDir + path + file.name);
+        } else
+            await putDir(sftp, path + file.name + '/');
+    }
 };
 
 const init = async () => {
